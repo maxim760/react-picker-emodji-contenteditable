@@ -5,6 +5,7 @@ import "emoji-mart/css/emoji-mart.css";
 import ContentEditable, { ContentEditableEvent } from 'react-contenteditable'
 import { ReactComponent as IconEmoji } from "./icons/smile.svg";
 import {pasteImgAtCaret } from "./utils/selection";
+import { getIconFromSrc } from "./utils/getIconFromSrc";
 
 
 const MAX_HEIGHT = 196;
@@ -49,22 +50,28 @@ export const App = () => {
     setHeight(inputRef.current?.getBoundingClientRect().height as number);
   };
 
-
-// todo: onPaste для одычных инпутов, мб через копибоард ??
+  const [textValue, setTextValue] = useState("")
+  const onChangeText: (arg: React.ChangeEvent<HTMLInputElement>) => void = (event) => {
+    setTextValue(event.target.value)
+  }
   const onPasteInput = async (event: React.ClipboardEvent<HTMLInputElement>) => {
-    // Get pasted data via clipboard API
+    event.preventDefault()
     const clipboardData = event.clipboardData || (window as any).clipboardData;
-    const pastedData = clipboardData.getData('Text');
-    console.log(pastedData, "pastedData");
-    console.log(clipboardData, "clipBOardData");
-    // console.dir(navigator.clipboard)
-    const readData = await (navigator.clipboard as IClipboard).read()
-    console.log(readData.items)
-    console.log(readData)
+    const el = document.createElement("html")
+    el.innerHTML = clipboardData.getData("text/html")
+    const result = Array.from(el.querySelector("body")!.querySelectorAll("body *")).map((element) => {
+      if (element.tagName == "IMG" && (element as HTMLImageElement).src.startsWith("https://cdn.jsdelivr.net/npm/emoji-datasource-apple@6.0.1/img")) {
+        const icon = getIconFromSrc((element as HTMLImageElement).src)
+        return icon ? icon : element.textContent
+      }
+      return element.textContent
+    })
+    // console.log(result)
+    setTextValue(result.join("") || clipboardData.getData("text/html"))
   }
   return (
     <div className="app">
-      <input onPaste={onPasteInput} />
+      <input onPaste={onPasteInput} onChange={onChangeText} value={textValue} />
       <div className="inputWrapper">
         <ContentEditable
           id="emoji-picker"

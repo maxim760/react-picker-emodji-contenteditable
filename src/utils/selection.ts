@@ -14,7 +14,6 @@ export const pasteImgAtCaret = ({ name, element }: IPasteHtml) => {
     img.className = "emoji-img"
     sel = window.getSelection() as any;
     if (!sel.anchorNode?.closest?.(`#${element.id}`)) {
-      console.log(element.id)
       const divs = element.querySelectorAll("div")
       const elemToPast = divs.length ?  divs[divs.length - 1] : element
       elemToPast.insertAdjacentElement("beforeend", img)
